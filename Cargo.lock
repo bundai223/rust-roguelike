@@ -1,0 +1,41 @@
+[root]
+name = "rust-roguelike"
+version = "0.1.0"
+dependencies = [
+ "tcod 0.8.0 (git+https://github.com/tomassedovic/tcod-rs.git?rev=8934fbf0d04826fd9dcc74a7e071c36f3bd15fef)",
+]
+
+[[package]]
+name = "bitflags"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "lazy_static"
+version = "0.1.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "libc"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "tcod"
+version = "0.8.0"
+source = "git+https://github.com/tomassedovic/tcod-rs.git?rev=8934fbf0d04826fd9dcc74a7e071c36f3bd15fef#8934fbf0d04826fd9dcc74a7e071c36f3bd15fef"
+dependencies = [
+ "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tcod-sys 3.0.0 (git+https://github.com/tomassedovic/tcod-rs.git?rev=8934fbf0d04826fd9dcc74a7e071c36f3bd15fef)",
+]
+
+[[package]]
+name = "tcod-sys"
+version = "3.0.0"
+source = "git+https://github.com/tomassedovic/tcod-rs.git?rev=8934fbf0d04826fd9dcc74a7e071c36f3bd15fef#8934fbf0d04826fd9dcc74a7e071c36f3bd15fef"
+dependencies = [
+ "libc 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+

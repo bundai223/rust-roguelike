@@ -3,15 +3,29 @@ use tcod::console::{Console, Root, BackgroundFlag};
 // use tcod::console::Renderer;
 use tcod::input::{KeyCode, Event, EventFlags, check_for_event};
 
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+struct Bound {
+    min: Point,
+    max: Point
+}
+
+const WindowSize: Point = Point { x: 80, y: 50 };
+
 fn main() {
     // initialize
-    let console_w = 80;
-    let console_h = 50;
-    let mut x = 40;
-    let mut y = 25;
+    let console = Bound {
+        min: Point { x:0, y:0 },
+        max: Point { x:WindowSize.x - 1, y:WindowSize.y - 1 },
+    };
+    let mut player = Point { x: 40, y: 25 };
+    let mut dog    = Point { x: 10, y: 10 };
 
     let mut root = Root::initializer()
-        .size(console_w, console_h)
+        .size(WindowSize.x, WindowSize.y)
         .title("Roguelike in Rustlang.")
 //         .renderer(Renderer::GLSL) // maybe need shader
         .init();
@@ -29,27 +43,27 @@ fn main() {
                         match key.code {
                             KeyCode::Escape => exit = true,
                             KeyCode::Left => {
-                                x -= 1;
-                                if x < 0 {
-                                    x = 0;
+                                player.x -= 1;
+                                if player.x < console.min.x {
+                                    player.x = console.min.x;
                                 }
                             },
                             KeyCode::Right => {
-                                x += 1;
-                                if console_w - 1 < x {
-                                    x = console_w - 1;
+                                player.x += 1;
+                                if console.max.x < player.x {
+                                    player.x = console.max.x;
                                 }
                             },
                             KeyCode::Up => {
-                                y -= 1;
-                                if y < 0 {
-                                    y = 0;
+                                player.y -= 1;
+                                if player.y < console.min.x {
+                                    player.y = console.min.x;
                                 }
                             },
                             KeyCode::Down => {
-                                y += 1;
-                                if console_h - 1< y {
-                                    y = console_h - 1;
+                                player.y += 1;
+                                if console.max.y < player.y {
+                                    player.y = console.max.y;
                                 }
                             },
                             _ => {}
@@ -60,13 +74,14 @@ fn main() {
             }
         }
 
-        render(&mut root, x, y);
+        root.clear();
+        render(&mut root, &player, '@');
+        render(&mut root, &dog, 'd');
+        root.flush();
     }
 }
 
 
-fn render(root: &mut Root, x: i32, y: i32) {
-    root.clear();
-    root.put_char(x, y, '@', BackgroundFlag::Set);
-    root.flush();
+fn render(root: &mut Root, chara: &Point, ascii:char) {
+    root.put_char(chara.x, chara.y, ascii, BackgroundFlag::Set);
 }

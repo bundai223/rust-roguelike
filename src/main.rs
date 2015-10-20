@@ -1,7 +1,9 @@
 extern crate tcod;
+extern crate rand;
+
 use tcod::console::{Console, Root, BackgroundFlag};
-// use tcod::console::Renderer;
 use tcod::input::{KeyCode, Event, EventFlags, check_for_event};
+use rand::Rng;
 
 
 trait Updates {
@@ -89,7 +91,25 @@ impl Npc {
 }
 
 impl Updates for Npc {
-    fn update(&mut self, event: Event) {
+    fn update(&mut self, _: Event) {
+        let mut rng = rand::thread_rng();
+
+        let mut offset = Point::new(rng.gen_range(0, 3) - 1, 0);
+        match WINDOW_BOUND.contains(&self.pos.offset(&offset)) {
+            Contains::DoesContains => {}
+            Contains::DoesNotContains => {
+                offset.x = 0;
+            }
+        }
+        offset.y = rng.gen_range(0, 3) - 1;
+        match WINDOW_BOUND.contains(&self.pos.offset(&offset)) {
+            Contains::DoesContains => {}
+            Contains::DoesNotContains => {
+                offset.y = 0;
+            }
+        }
+        println!("Npc offset: {}, {}", offset.x, offset.y);
+        self.pos = self.pos.offset(&offset);
     }
 
     fn render(&self, root: &mut Root) {

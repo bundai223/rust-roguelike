@@ -3,20 +3,97 @@ use tcod::console::{Console, Root, BackgroundFlag};
 // use tcod::console::Renderer;
 use tcod::input::{KeyCode, Event, EventFlags, check_for_event};
 
+
+trait Updates {
+    fn update(&mut self, Event);
+    fn render(&self, &mut Root);
+}
+
 struct Point {
     x: i32,
     y: i32,
 }
 
 impl Point {
-//     fn offset(&self, offset_x:i32, offset_y:i32) {
-//         Point { x: self.x + offset_x, y: self.y + offset_y }
-//     }
     fn new(x:i32, y:i32) -> Point {
         Point {x: x, y: y }
     }
     fn offset(&self, offset:&Point) -> Point {
         Point::new(self.x + offset.x, self.y + offset.y)
+    }
+}
+
+struct Player {
+    ascii: char,
+    pos: Point,
+}
+
+impl Player {
+    fn new(ascii: char, pos: Point) -> Player {
+        Player {
+            ascii: ascii,
+            pos: pos,
+        }
+    }
+}
+
+impl Updates for Player {
+    fn update(&mut self, event: Event) {
+        let mut movevec = Point::new( 0, 0 );
+        match event {
+            Event::Key(key) => {
+                match key.code {
+                    KeyCode::Left => {
+                        movevec.x = -1;
+                    },
+                    KeyCode::Right => {
+                        movevec.x = 1;
+                    },
+                    KeyCode::Up => {
+                        movevec.y -= 1;
+                    },
+                    KeyCode::Down => {
+                        movevec.y = 1;
+                    },
+                    _ => {}
+                }
+            },
+            _ => {}
+        }
+
+        match WINDOW_BOUND.contains(&self.pos.offset(&movevec)) {
+            Contains::DoesContains => {
+                self.pos = self.pos.offset(&movevec);
+            },
+            Contains::DoesNotContains => {}
+        }
+    }
+
+    fn render(&self, root: &mut Root) {
+        root.put_char(self.pos.x, self.pos.y, self.ascii, BackgroundFlag::Set);
+    }
+}
+
+struct Npc {
+    ascii: char,
+    pos: Point,
+}
+
+impl Npc {
+    fn new(ascii: char, pos: Point) -> Npc {
+        Npc {
+            ascii: ascii,
+            pos: pos,
+        }
+    }
+}
+
+impl Updates for Npc {
+    fn update(&mut self, event: Event) {
+    }
+
+    fn render(&self, root: &mut Root) {
+        root.put_char(self.pos.x, self.pos.y, self.ascii, BackgroundFlag::Set);
     }
 }
 
@@ -32,79 +109,59 @@ enum Contains {
 
 impl Bound {
     fn contains(&self, point: &Point) -> Contains {
-        if self.min.x <= point.x && point.x <= self.max.x {
-            if self.min.y <= point.y && point.y <= self.max.y {
-                return Contains::DoesContains;
-            }
+        if (self.min.x <= point.x && point.x <= self.max.x) &&
+           (self.min.y <= point.y && point.y <= self.max.y) {
+            Contains::DoesContains
+        } else {
+            Contains::DoesNotContains
         }
-        return Contains::DoesNotContains;
     }
 }
 
-const WindowSize: Point = Point { x: 80, y: 50 };
+const WINDOW_SIZE: Point = Point { x: 80, y: 50 };
+const WINDOW_BOUND: Bound = Bound {
+    min: Point{ x:0, y:0 },
+    max: Point{ x:WINDOW_SIZE.x - 1, y:WINDOW_SIZE.y - 1 },
+};
 
 fn main() {
     // initialize
-    let console = Bound {
-        min: Point::new( 0, 0 ),
-        max: Point::new( WindowSize.x - 1, WindowSize.y - 1 ),
-    };
-    let mut player = Point::new( 40, 25 );
-    let mut dog    = Point::new( 10, 10 );
+    let mut player = Player::new('@', Point::new( 40, 25 ));
+    let mut dog    = Npc::new('d', Point::new( 10, 10 ));
 
     let mut root = Root::initializer()
-        .size(WindowSize.x, WindowSize.y)
+        .size(WINDOW_SIZE.x, WINDOW_SIZE.y)
         .title("Roguelike in Rustlang.")
-//         .renderer(Renderer::GLSL) // maybe need shader
         .init();
     let mut exit = false;
 
     // Render
     while!(root.window_closed() || exit) {
         // polling Event
-        let event = check_for_event(EventFlags::all());
-        let mut movevec = Point::new( 0, 0 );
-        match event {
+        let checked_event = check_for_event(EventFlags::all());
+        match checked_event {
             None => {},
             Some(event_tuple) => {
                 match event_tuple.1 {
                     Event::Key(key) => {
                         match key.code {
                             KeyCode::Escape => exit = true,
-                            KeyCode::Left => {
-                                movevec.x = -1;
-                            },
-                            KeyCode::Right => {
-                                movevec.x = 1;
-                            },
-                            KeyCode::Up => {
-                                movevec.y -= 1;
-                            },
-                            KeyCode::Down => {
-                                movevec.y = 1;
-                            },
-                            _ => {}
+                            _ => {
+                                player.update(event_tuple.1);
+                                dog.update(event_tuple.1);
+                            }
                         }
                     },
                     _ => {}
                 }
             }
         }
-        match console.contains(&player.offset(&movevec)) {
-            Contains::DoesContains => {
-                player = player.offset(&movevec);
-            },
-            Contains::DoesNotContains => {}
-        }
 
         root.clear();
-        render(&mut root, &player, '@');
-        render(&mut root, &dog, 'd');
+        player.render(&mut root);
+        dog.render(&mut root);
         root.flush();
     }
 }
 
 
-fn render(root: &mut Root, chara: &Point, ascii:char) {
-    root.put_char(chara.x, chara.y, ascii, BackgroundFlag::Set);
-}

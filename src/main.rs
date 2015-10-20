@@ -8,9 +8,37 @@ struct Point {
     y: i32,
 }
 
+impl Point {
+//     fn offset(&self, offset_x:i32, offset_y:i32) {
+//         Point { x: self.x + offset_x, y: self.y + offset_y }
+//     }
+    fn new(x:i32, y:i32) -> Point {
+        Point {x: x, y: y }
+    }
+    fn offset(&self, offset:&Point) -> Point {
+        Point::new(self.x + offset.x, self.y + offset.y)
+    }
+}
+
 struct Bound {
     min: Point,
     max: Point
+}
+
+enum Contains {
+    DoesContains,
+    DoesNotContains,
+}
+
+impl Bound {
+    fn contains(&self, point: &Point) -> Contains {
+        if self.min.x <= point.x && point.x <= self.max.x {
+            if self.min.y <= point.y && point.y <= self.max.y {
+                return Contains::DoesContains;
+            }
+        }
+        return Contains::DoesNotContains;
+    }
 }
 
 const WindowSize: Point = Point { x: 80, y: 50 };
@@ -18,11 +46,11 @@ const WindowSize: Point = Point { x: 80, y: 50 };
 fn main() {
     // initialize
     let console = Bound {
-        min: Point { x:0, y:0 },
-        max: Point { x:WindowSize.x - 1, y:WindowSize.y - 1 },
+        min: Point::new( 0, 0 ),
+        max: Point::new( WindowSize.x - 1, WindowSize.y - 1 ),
     };
-    let mut player = Point { x: 40, y: 25 };
-    let mut dog    = Point { x: 10, y: 10 };
+    let mut player = Point::new( 40, 25 );
+    let mut dog    = Point::new( 10, 10 );
 
     let mut root = Root::initializer()
         .size(WindowSize.x, WindowSize.y)
@@ -35,6 +63,7 @@ fn main() {
     while!(root.window_closed() || exit) {
         // polling Event
         let event = check_for_event(EventFlags::all());
+        let mut movevec = Point::new( 0, 0 );
         match event {
             None => {},
             Some(event_tuple) => {
@@ -43,28 +72,16 @@ fn main() {
                         match key.code {
                             KeyCode::Escape => exit = true,
                             KeyCode::Left => {
-                                player.x -= 1;
-                                if player.x < console.min.x {
-                                    player.x = console.min.x;
-                                }
+                                movevec.x = -1;
                             },
                             KeyCode::Right => {
-                                player.x += 1;
-                                if console.max.x < player.x {
-                                    player.x = console.max.x;
-                                }
+                                movevec.x = 1;
                             },
                             KeyCode::Up => {
-                                player.y -= 1;
-                                if player.y < console.min.x {
-                                    player.y = console.min.x;
-                                }
+                                movevec.y -= 1;
                             },
                             KeyCode::Down => {
-                                player.y += 1;
-                                if console.max.y < player.y {
-                                    player.y = console.max.y;
-                                }
+                                movevec.y = 1;
                             },
                             _ => {}
                         }
@@ -72,6 +89,12 @@ fn main() {
                     _ => {}
                 }
             }
+        }
+        match console.contains(&player.offset(&movevec)) {
+            Contains::DoesContains => {
+                player = player.offset(&movevec);
+            },
+            Contains::DoesNotContains => {}
         }
 
         root.clear();

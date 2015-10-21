@@ -52,7 +52,7 @@ impl Updates for Player {
                         movevec.x = 1;
                     },
                     KeyCode::Up => {
-                        movevec.y -= 1;
+                        movevec.y = -1;
                     },
                     KeyCode::Down => {
                         movevec.y = 1;
@@ -162,13 +162,14 @@ fn main() {
         match checked_event {
             None => {},
             Some(event_tuple) => {
-                match event_tuple.1 {
+                let event = event_tuple.1;
+                match event {
                     Event::Key(key) => {
                         match key.code {
                             KeyCode::Escape => exit = true,
                             _ => {
-                                player.update(event_tuple.1);
-                                dog.update(event_tuple.1);
+                                player.update(event);
+                                dog.update(event);
                             }
                         }
                     },

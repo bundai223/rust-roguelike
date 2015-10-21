@@ -2,12 +2,12 @@ extern crate tcod;
 extern crate rand;
 
 use tcod::console::{Console, Root, BackgroundFlag};
-use tcod::input::{KeyCode, Event, EventFlags, check_for_event};
+use tcod::input::{Key, KeyCode};
 use rand::Rng;
 
 
 trait Updates {
-    fn update(&mut self, Event);
+    fn update(&mut self, Key);
     fn render(&self, &mut Root);
 }
 
@@ -40,26 +40,13 @@ impl Player {
 }
 
 impl Updates for Player {
-    fn update(&mut self, event: Event) {
+    fn update(&mut self, key: Key) {
         let mut movevec = Point::new( 0, 0 );
-        match event {
-            Event::Key(key) => {
-                match key.code {
-                    KeyCode::Left => {
-                        movevec.x = -1;
-                    },
-                    KeyCode::Right => {
-                        movevec.x = 1;
-                    },
-                    KeyCode::Up => {
-                        movevec.y = -1;
-                    },
-                    KeyCode::Down => {
-                        movevec.y = 1;
-                    },
-                    _ => {}
-                }
-            },
+        match key {
+            Key{ code: KeyCode::Left, .. }  => movevec.x = -1,
+            Key{ code: KeyCode::Right, .. } => movevec.x = 1,
+            Key{ code: KeyCode::Up, .. }    => movevec.y = -1,
+            Key{ code: KeyCode::Down, .. }  => movevec.y = 1,
             _ => {}
         }
 
@@ -91,7 +78,7 @@ impl Npc {
 }
 
 impl Updates for Npc {
-    fn update(&mut self, _: Event) {
+    fn update(&mut self, _: Key) {
         let mut rng = rand::thread_rng();
 
         let mut offset = Point::new(rng.gen_range(0, 3) - 1, 0);
@@ -108,7 +95,6 @@ impl Updates for Npc {
                 offset.y = 0;
             }
         }
-        println!("Npc offset: {}, {}", offset.x, offset.y);
         self.pos = self.pos.offset(&offset);
     }
 
@@ -156,25 +142,18 @@ fn main() {
     let mut exit = false;
 
     // Render
+    root.clear();
+    player.render(&mut root);
+    dog.render(&mut root);
+    root.flush();
+
     while!(root.window_closed() || exit) {
-        // polling Event
-        let checked_event = check_for_event(EventFlags::all());
-        match checked_event {
-            None => {},
-            Some(event_tuple) => {
-                let event = event_tuple.1;
-                match event {
-                    Event::Key(key) => {
-                        match key.code {
-                            KeyCode::Escape => exit = true,
-                            _ => {
-                                player.update(event);
-                                dog.update(event);
-                            }
-                        }
-                    },
-                    _ => {}
-                }
+        let keypress = root.wait_for_keypress(true);
+        match keypress {
+            Key{ code: KeyCode::Escape, .. } => exit = true,
+            key => {
+                player.update(key);
+                dog.update(key);
             }
         }
 

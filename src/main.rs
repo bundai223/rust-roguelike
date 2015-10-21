@@ -164,4 +164,15 @@ fn main() {
     }
 }
 
+fn update(objs: &mut Vec<Box<Updates>>, key: Key) {
+    for i in objs.mut_iter() {
+        i.update(key);
+    }
+}
+
+fn render(objs: &Vec<Box<Updates>>, root: &mut Root) {
+    for i in objs.iter() {
+        i.render(root);
+    }
+}
 

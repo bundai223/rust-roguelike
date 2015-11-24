@@ -6,6 +6,11 @@ use tcod::input::{Key, KeyCode};
 use rand::Rng;
 
 
+enum Contains {
+    DoesContains,
+    DoesNotContains,
+}
+
 trait Updates {
     fn update(&mut self, Key);
     fn render(&self, &mut Root);
@@ -22,6 +27,22 @@ impl Point {
     }
     fn offset(&self, offset:&Point) -> Point {
         Point::new(self.x + offset.x, self.y + offset.y)
+    }
+}
+
+struct Bound {
+    min: Point,
+    max: Point
+}
+
+impl Bound {
+    fn contains(&self, point: &Point) -> Contains {
+        if (self.min.x <= point.x && point.x <= self.max.x) &&
+           (self.min.y <= point.y && point.y <= self.max.y) {
+            Contains::DoesContains
+        } else {
+            Contains::DoesNotContains
+        }
     }
 }
 
@@ -100,27 +121,6 @@ impl Updates for Npc {
 
     fn render(&self, root: &mut Root) {
         root.put_char(self.pos.x, self.pos.y, self.ascii, BackgroundFlag::Set);
-    }
-}
-
-struct Bound {
-    min: Point,
-    max: Point
-}
-
-enum Contains {
-    DoesContains,
-    DoesNotContains,
-}
-
-impl Bound {
-    fn contains(&self, point: &Point) -> Contains {
-        if (self.min.x <= point.x && point.x <= self.max.x) &&
-           (self.min.y <= point.y && point.y <= self.max.y) {
-            Contains::DoesContains
-        } else {
-            Contains::DoesNotContains
-        }
     }
 }
 
